@@ -1,19 +1,27 @@
 import { NestFactory } from '@nestjs/core';
+import { ValidationPipe } from '@nestjs/common';
+import { ConfigService } from '@nestjs/config';
 import { AppModule } from './app.module';
-import { ValidationPipe, Logger } from '@nestjs/common';
-// import { LoggerMiddleware } from './common/middleware/logger.middleware';
+import { HttpExceptionFilter } from './common/filters/http-exception.filter';
 import { json } from 'express';
+import { DocumentBuilder, SwaggerModule } from '@nestjs/swagger';
+import { apiReference } from '@scalar/nestjs-api-reference';
 
 async function bootstrap() {
   const app = await NestFactory.create(AppModule);
 
-  // Global Middleware
-  // app.use(LoggerMiddleware);
+  const config = new DocumentBuilder()
+    .setTitle('DataEvaluation')
+    .setDescription('The DataEvaluation API description')
+    .setVersion('1.0')
+    .addTag('DataEvaluation')
+    .build();
+  const documentFactory = () => SwaggerModule.createDocument(app, config);
+  SwaggerModule.setup('api', app, documentFactory);
 
   // Enable JSON Parsing
   app.use(json());
 
-  // Global Validation Pipe
   app.useGlobalPipes(
     new ValidationPipe({
       whitelist: true,
@@ -22,8 +30,12 @@ async function bootstrap() {
     }),
   );
 
-  const PORT = process.env.PORT || 3000;
-  await app.listen(PORT);
-  Logger.log(`🚀 Application is running on: http://localhost:${PORT}`);
+  app.useGlobalFilters(new HttpExceptionFilter());
+
+  const configService = app.get(ConfigService);
+  const port = configService.get<number>('PORT', 3000);
+
+  await app.listen(port);
+  console.log(`Application is running on: ${await app.getUrl()}`);
 }
 bootstrap();

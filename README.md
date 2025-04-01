@@ -26,6 +26,12 @@
 [Nest](https://github.com/nestjs/nest) framework TypeScript starter repository.
 
 ## Project setup
+```bash
+$ npx typeorm schema:sync -d src/config/typeorm.config.ts
+$ npx typeorm schema:drop -d src/config/typeorm.config.ts
+$ npx typeorm schema:sync -d src/config/typeorm.config.ts
+```
+
 
 ```bash
 $ pnpm install
